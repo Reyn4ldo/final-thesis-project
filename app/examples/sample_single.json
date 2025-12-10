@@ -1,0 +1,31 @@
+{
+  "isolate_id": "SINGLE_EXAMPLE",
+  "description": "Example bacterial isolate with mixed resistance pattern",
+  "resistance_profile": {
+    "ampicillin": 2,
+    "amoxicillin/clavulanic_acid": 2,
+    "ceftaroline": 0,
+    "cefalexin": 2,
+    "cefalotin": 2,
+    "cefpodoxime": 0,
+    "cefotaxime": 0,
+    "cefovecin": 0,
+    "ceftiofur": 0,
+    "ceftazidime/avibactam": 0,
+    "imepenem": 0,
+    "amikacin": 0,
+    "gentamicin": 0,
+    "neomycin": 0,
+    "nalidixic_acid": 0,
+    "enrofloxacin": 0,
+    "marbofloxacin": 0,
+    "pradofloxacin": 0,
+    "doxycycline": 0,
+    "tetracycline": 1,
+    "nitrofurantoin": 0,
+    "chloramphenicol": 0,
+    "trimethoprim/sulfamethazole": 0
+  },
+  "expected_mar_index": 0.174,
+  "notes": "Resistant to some beta-lactams, intermediate to tetracycline, susceptible to others"
+}
