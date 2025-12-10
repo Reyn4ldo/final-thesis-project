@@ -206,7 +206,7 @@ def perform_tsne(X: np.ndarray, n_components: int = 2, perplexity: int = 30,
     """
     X_array = np.array(X) if isinstance(X, pd.DataFrame) else X
     model = TSNE(n_components=n_components, perplexity=perplexity, 
-                 random_state=random_state, n_iter=1000)
+                 random_state=random_state, max_iter=1000)
     X_transformed = model.fit_transform(X_array)
     return X_transformed
 
