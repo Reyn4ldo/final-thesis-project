@@ -1,0 +1,6 @@
+isolate_id,ampicillin,amoxicillin/clavulanic_acid,ceftaroline,cefalexin,cefalotin,cefpodoxime,cefotaxime,cefovecin,ceftiofur,ceftazidime/avibactam,imepenem,amikacin,gentamicin,neomycin,nalidixic_acid,enrofloxacin,marbofloxacin,pradofloxacin,doxycycline,tetracycline,nitrofurantoin,chloramphenicol,trimethoprim/sulfamethazole
+EXAMPLE001,2,2,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0
+EXAMPLE002,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+EXAMPLE003,2,2,2,2,2,2,2,1,1,0,0,1,2,1,2,2,2,1,2,2,0,1,2
+EXAMPLE004,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+EXAMPLE005,2,2,0,2,2,0,0,0,0,0,0,0,0,0,2,2,2,1,0,1,0,0,0

@@ -1,211 +1,240 @@
 """
 AMR Pattern Recognition - Streamlit Web Application
 
+Main entry point for the multi-page Streamlit application.
+
 This application provides an interactive interface for:
-- Uploading new AMR data
-- Visualizing resistance patterns
-- Making predictions using trained models
-- Exploring model performance
+- Predicting multi-drug resistance (MDR) from resistance profiles
+- Identifying bacterial species from resistance patterns
+- Batch processing of multiple isolates
+- Exploring model performance and insights
+- Visualizing resistance patterns and clusters
 """
 
 import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
-import plotly.express as px
-import plotly.graph_objects as go
 from pathlib import Path
 import sys
 
-# Add src to path
-sys.path.append('..')
-from src.data.preprocessing import clean_data, encode_categorical_features
-from src.features.build_features import calculate_mar_index
-from src.models.evaluation import calculate_classification_metrics
-from utils import load_model, preprocess_input, create_prediction_plot
+# Add app directory to path for imports
+app_dir = Path(__file__).parent
+sys.path.append(str(app_dir))
+
+import config
+from components import create_sidebar_info
 
 # Page configuration
 st.set_page_config(
-    page_title="AMR Pattern Recognition",
-    page_icon="🦠",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title=config.PAGE_TITLE,
+    page_icon=config.PAGE_ICON,
+    layout=config.LAYOUT,
+    initial_sidebar_state=config.INITIAL_SIDEBAR_STATE
 )
 
-# Custom CSS
+# Custom CSS for improved styling
 st.markdown("""
     <style>
     .main-header {
         font-size: 3rem;
         color: #1f77b4;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
     }
     .sub-header {
         font-size: 1.5rem;
         color: #ff7f0e;
         margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .stMetric {
+        background-color: #f0f2f6;
+        padding: 1rem;
+        border-radius: 0.5rem;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# Title
+# Main page content
 st.markdown('<h1 class="main-header">🦠 AMR Pattern Recognition System</h1>', unsafe_allow_html=True)
 st.markdown("### Machine Learning-based Antimicrobial Resistance Prediction")
+st.markdown("---")
+
+# Welcome message
+st.markdown("""
+## Welcome! 👋
+
+This is a comprehensive web application for analyzing and predicting antimicrobial resistance (AMR) 
+patterns in bacterial isolates using advanced machine learning techniques.
+
+### 🚀 Getting Started
+
+Use the sidebar to navigate between different pages:
+
+- **🏠 Home** - Project overview and quick start guide
+- **🦠 MDR Prediction** - Predict multi-drug resistance status
+- **🔬 Species Prediction** - Identify bacterial species
+- **📊 Batch Prediction** - Process multiple isolates from CSV
+- **📈 Model Insights** - View model performance and feature importance
+- **🗺️ Data Explorer** - Visualize resistance patterns and clusters
+""")
+
+st.markdown("---")
+
+# Quick overview
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("""
+    ### 🎯 Key Features
+    
+    **For Healthcare Professionals:**
+    - Quick MDR status predictions
+    - Species identification support
+    - Batch processing capability
+    - Clinical interpretation guidance
+    
+    **For Researchers:**
+    - Model performance metrics
+    - Feature importance analysis
+    - Pattern visualization
+    - Data exploration tools
+    """)
+
+with col2:
+    st.markdown("""
+    ### 📊 What You Can Do
+    
+    **Single Predictions:**
+    1. Input a resistance profile manually
+    2. Get instant MDR/species prediction
+    3. View confidence scores
+    4. Understand the results
+    
+    **Batch Analysis:**
+    1. Upload a CSV file
+    2. Process multiple isolates
+    3. Download results
+    4. Visualize patterns
+    """)
+
+st.markdown("---")
+
+# Statistics
+st.markdown("### 📈 System Information")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric(
+        label="Antibiotics Analyzed",
+        value=len(config.ANTIBIOTICS),
+        help="Number of different antibiotics in the resistance profiles"
+    )
+
+with col2:
+    st.metric(
+        label="Species Classes",
+        value=len(config.SPECIES_NAMES),
+        help="Number of bacterial species the system can identify"
+    )
+
+with col3:
+    st.metric(
+        label="ML Models",
+        value=len(config.MODEL_TYPES),
+        help="Number of machine learning algorithms compared"
+    )
+
+with col4:
+    st.metric(
+        label="MAR Threshold",
+        value=f"{config.MAR_THRESHOLD:.0%}",
+        help="Threshold for multi-drug resistance classification"
+    )
+
+st.markdown("---")
+
+# Model status check
+st.markdown("### 🔧 System Status")
+
+mar_model_exists = config.MAR_MODEL_PATH.exists()
+species_model_exists = config.SPECIES_MODEL_PATH.exists()
+data_exists = config.CLEANED_DATA_PATH.exists()
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if mar_model_exists:
+        st.success("✅ MDR Model Available")
+    else:
+        st.warning("⚠️ MDR Model Not Found")
+
+with col2:
+    if species_model_exists:
+        st.success("✅ Species Model Available")
+    else:
+        st.warning("⚠️ Species Model Not Found")
+
+with col3:
+    if data_exists:
+        st.success("✅ Dataset Available")
+    else:
+        st.warning("⚠️ Dataset Not Found")
+
+if not (mar_model_exists or species_model_exists):
+    st.info("""
+    **📝 Note:** Models need to be trained before making predictions.
+    
+    To train models:
+    1. Run the data preprocessing notebook
+    2. Run the supervised learning notebook  
+    3. Models will be saved to the `models/` directory
+    
+    You can still explore the interface without trained models!
+    """)
+
+st.markdown("---")
+
+# Quick links
+st.markdown("""
+### 🔗 Quick Links
+
+**Start Predicting:**
+- 🦠 [MDR Prediction](#) - Determine if an isolate is multi-drug resistant
+- 🔬 [Species Prediction](#) - Identify the bacterial species
+
+**Analyze Data:**
+- 📊 [Batch Prediction](#) - Process multiple isolates at once
+- 📈 [Model Insights](#) - See which antibiotics matter most
+- 🗺️ [Data Explorer](#) - Visualize resistance landscapes
+
+### 📚 Documentation
+
+For detailed information about:
+- How the models work
+- Interpreting predictions
+- Data format requirements
+- Clinical considerations
+
+Visit the individual pages using the sidebar navigation.
+""")
+
+st.markdown("---")
+
+# Footer information
+st.markdown("""
+### ℹ️ About
+
+This application is part of a thesis project on antimicrobial resistance pattern recognition.
+It demonstrates how machine learning can assist in:
+
+- Early detection of multi-drug resistant bacteria
+- Rapid species identification from resistance patterns
+- Pattern discovery in AMR surveillance data
+- Evidence-based clinical decision support
+
+**Disclaimer:** This tool is for research and educational purposes. Always validate 
+predictions with laboratory testing and consult clinical experts for treatment decisions.
+""")
 
 # Sidebar
-st.sidebar.title("Navigation")
-page = st.sidebar.radio(
-    "Go to",
-    ["Home", "Data Upload", "Make Predictions", "Model Performance", "About"]
-)
-
-# Home Page
-if page == "Home":
-    st.markdown('<h2 class="sub-header">Welcome to the AMR Pattern Recognition System</h2>', 
-                unsafe_allow_html=True)
-    
-    st.write("""
-    This application uses machine learning to analyze and predict antimicrobial resistance patterns.
-    
-    **Key Features:**
-    - 📊 Interactive data visualization
-    - 🤖 Multiple ML models for prediction
-    - 📈 Real-time resistance pattern analysis
-    - 🎯 High accuracy predictions
-    
-    **How to Use:**
-    1. Upload your AMR dataset or use sample data
-    2. Explore visualizations and patterns
-    3. Get predictions from trained models
-    4. View model performance metrics
-    """)
-    
-    # Display sample statistics
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Models Available", "6", help="RF, XGBoost, LR, SVM, KNN, NB")
-    with col2:
-        st.metric("Best Model Accuracy", "TBD", help="To be updated after training")
-    with col3:
-        st.metric("Features Used", "TBD", help="Antibiotic resistance profiles")
-
-# Data Upload Page
-elif page == "Data Upload":
-    st.markdown('<h2 class="sub-header">📤 Upload AMR Data</h2>', unsafe_allow_html=True)
-    
-    uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'])
-    
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        
-        st.success(f"Successfully loaded dataset with {df.shape[0]} rows and {df.shape[1]} columns")
-        
-        # Display data preview
-        st.subheader("Data Preview")
-        st.dataframe(df.head(10))
-        
-        # Display basic statistics
-        st.subheader("Dataset Statistics")
-        st.write(df.describe())
-        
-        # Data quality checks
-        st.subheader("Data Quality")
-        missing_data = df.isnull().sum()
-        if missing_data.sum() > 0:
-            st.warning(f"Found {missing_data.sum()} missing values")
-            st.write(missing_data[missing_data > 0])
-        else:
-            st.success("No missing values found!")
-
-# Predictions Page
-elif page == "Make Predictions":
-    st.markdown('<h2 class="sub-header">🎯 Make Predictions</h2>', unsafe_allow_html=True)
-    
-    # TODO: Load trained models
-    st.write("**Select a model for prediction:**")
-    
-    model_choice = st.selectbox(
-        "Choose model",
-        ["Random Forest", "XGBoost", "Logistic Regression", "SVM", "KNN", "Naive Bayes"]
-    )
-    
-    st.write("""
-    **Input Method:**
-    """)
-    
-    input_method = st.radio("", ["Manual Input", "Upload CSV"])
-    
-    if input_method == "Manual Input":
-        st.write("Enter antibiotic resistance data:")
-        # TODO: Create form for manual input
-        st.info("Manual input form to be implemented")
-        
-    else:
-        uploaded_pred_file = st.file_uploader("Upload data for prediction", type=['csv'])
-        if uploaded_pred_file is not None:
-            pred_df = pd.read_csv(uploaded_pred_file)
-            st.dataframe(pred_df.head())
-            
-            if st.button("Generate Predictions"):
-                # TODO: Make predictions
-                st.info("Prediction functionality to be implemented")
-
-# Model Performance Page
-elif page == "Model Performance":
-    st.markdown('<h2 class="sub-header">📊 Model Performance</h2>', unsafe_allow_html=True)
-    
-    st.write("**Compare performance across all trained models:**")
-    
-    # TODO: Load and display model comparison results
-    st.info("Model performance metrics will be displayed here after training")
-    
-    # Placeholder for performance visualization
-    # st.plotly_chart(fig, use_container_width=True)
-
-# About Page
-elif page == "About":
-    st.markdown('<h2 class="sub-header">ℹ️ About This Project</h2>', unsafe_allow_html=True)
-    
-    st.write("""
-    ## AMR Pattern Recognition using Machine Learning
-    
-    This thesis project develops machine learning models to predict antimicrobial resistance patterns
-    and identify critical resistance profiles in bacterial isolates.
-    
-    ### Methodology
-    
-    1. **Data Collection**: AMR test results from clinical isolates
-    2. **Preprocessing**: Data cleaning, encoding, and feature engineering
-    3. **Unsupervised Learning**: Clustering and pattern discovery
-    4. **Supervised Learning**: Classification models for prediction
-    5. **Evaluation**: Comprehensive model comparison and validation
-    6. **Deployment**: Interactive web application
-    
-    ### Technologies Used
-    
-    - **Python**: Primary programming language
-    - **Scikit-learn**: Machine learning algorithms
-    - **XGBoost**: Gradient boosting framework
-    - **Streamlit**: Web application framework
-    - **Plotly**: Interactive visualizations
-    
-    ### Author
-    
-    [Your Name]  
-    Final Thesis Project  
-    [University Name]  
-    [Year]
-    
-    ### Contact
-    
-    For questions or feedback, please contact: [your.email@example.com]
-    """)
-
-# Footer
-st.sidebar.markdown("---")
-st.sidebar.info("""
-    **AMR Pattern Recognition v0.1.0**  
-    Developed for thesis research  
-    © 2024
-""")
+create_sidebar_info()
