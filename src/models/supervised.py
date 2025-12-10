@@ -44,7 +44,6 @@ def get_classifier(name: str, random_state: int = 42):
             max_depth=6,
             learning_rate=0.1,
             random_state=random_state,
-            use_label_encoder=False,
             eval_metric='logloss'
         ),
         'logistic_regression': LogisticRegression(

@@ -1016,8 +1016,9 @@ def plot_multiclass_confusion_matrix(
     ax.set_ylabel('True Label', fontsize=12)
     ax.set_title(title, fontsize=14, fontweight='bold')
     
-    plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=0)
+    ax.tick_params(axis='x', rotation=45)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    ax.tick_params(axis='y', rotation=0)
     
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')

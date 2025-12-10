@@ -120,7 +120,7 @@ def calculate_roc_auc(y_true, y_proba, multi_class: str = 'ovr', average: str = 
             # Multi-class
             return roc_auc_score(y_true, y_proba, multi_class=multi_class, average=average)
     except Exception as e:
-        print(f"Error calculating ROC-AUC: {e}")
+        print(f"Error calculating ROC-AUC score: {e}")
         return 0.0
 
 
