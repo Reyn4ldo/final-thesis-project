@@ -10,89 +10,40 @@ import pandas as pd
 import numpy as np
 
 
-def calculate_mar_index(df: pd.DataFrame, antibiotic_columns: List[str]) -> pd.Series:
+def extract_resistance_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Calculate the Multiple Antibiotic Resistance (MAR) index.
-    
-    MAR index = Number of antibiotics to which isolate is resistant / 
-                Total number of antibiotics tested
+    Extract only encoded resistance interpretation columns.
     
     Args:
-        df: DataFrame containing antibiotic resistance data
-        antibiotic_columns: List of column names representing antibiotics
+        df: DataFrame containing encoded resistance data
         
     Returns:
-        Series containing MAR index for each sample
-        
-    TODO: Implement MAR index calculation:
-        - Count resistant (R) results
-        - Divide by total antibiotics tested
-        - Handle missing values appropriately
+        DataFrame with only encoded resistance features
     """
-    pass
+    # Find all encoded columns (ending with _encoded)
+    encoded_cols = [col for col in df.columns if col.endswith('_encoded')]
+    
+    if not encoded_cols:
+        raise ValueError("No encoded resistance columns found. Run encode_resistance first.")
+    
+    return df[encoded_cols].copy()
 
 
-def create_resistance_patterns(df: pd.DataFrame, antibiotic_columns: List[str]) -> pd.DataFrame:
+def create_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Create binary resistance pattern features.
+    Create final feature matrix for machine learning.
     
     Args:
-        df: DataFrame containing antibiotic resistance data
-        antibiotic_columns: List of column names representing antibiotics
+        df: DataFrame containing encoded resistance data
         
     Returns:
-        DataFrame with binary resistance patterns
-        
-    TODO: Implement conversion of R/S/I to binary (1/0)
+        DataFrame with feature matrix ready for ML models
     """
-    pass
-
-
-def extract_temporal_features(df: pd.DataFrame, date_column: str) -> pd.DataFrame:
-    """
-    Extract temporal features from date columns.
+    # Extract resistance features
+    feature_matrix = extract_resistance_features(df)
     
-    Args:
-        df: DataFrame containing date information
-        date_column: Name of the date column
-        
-    Returns:
-        DataFrame with additional temporal features
-        
-    TODO: Extract year, month, season, etc.
-    """
-    pass
-
-
-def create_interaction_features(df: pd.DataFrame, feature_pairs: List[Tuple[str, str]]) -> pd.DataFrame:
-    """
-    Create interaction features between specified feature pairs.
+    # Fill any remaining NaN values with -1 to indicate not tested
+    # (alternative: could drop rows with NaN or use imputation)
+    feature_matrix = feature_matrix.fillna(-1)
     
-    Args:
-        df: DataFrame containing features
-        feature_pairs: List of tuples specifying feature pairs
-        
-    Returns:
-        DataFrame with additional interaction features
-        
-    TODO: Create polynomial and interaction features
-    """
-    pass
-
-
-def select_features(X: pd.DataFrame, y: pd.Series, method: str = "mutual_info", k: int = 10):
-    """
-    Select top k features based on specified method.
-    
-    Args:
-        X: Feature DataFrame
-        y: Target Series
-        method: Feature selection method ("mutual_info", "chi2", "anova")
-        k: Number of features to select
-        
-    Returns:
-        Selected feature names
-        
-    TODO: Implement feature selection using sklearn
-    """
-    pass
+    return feature_matrix
