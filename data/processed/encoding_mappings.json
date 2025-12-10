@@ -1,0 +1,16 @@
+{
+  "resistance_encoding": {
+    "s": 0,
+    "i": 1,
+    "r": 2,
+    "description": "Ordinal encoding for antibiotic resistance interpretations"
+  },
+  "mar_threshold": 0.2,
+  "species_min_samples": 10,
+  "num_features": 23,
+  "num_antibiotics": 23,
+  "train_size": 0.7,
+  "val_size": 0.2,
+  "test_size": 0.1,
+  "random_state": 42
+}

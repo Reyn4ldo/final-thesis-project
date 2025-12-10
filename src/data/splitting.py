@@ -10,66 +10,50 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 
-def split_data(
+def stratified_split(
     X: pd.DataFrame,
     y: pd.Series,
-    test_size: float = 0.2,
-    val_size: float = 0.1,
+    train_size: float = 0.7,
+    val_size: float = 0.2,
+    test_size: float = 0.1,
     random_state: int = 42
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
     """
-    Split data into train, validation, and test sets.
+    Split data into train, validation, and test sets with stratification.
     
     Args:
         X: Feature DataFrame
         y: Target Series
-        test_size: Proportion of data for test set
-        val_size: Proportion of training data for validation set
+        train_size: Proportion of data for training set (default 0.7)
+        val_size: Proportion of data for validation set (default 0.2)
+        test_size: Proportion of data for test set (default 0.1)
         random_state: Random seed for reproducibility
         
     Returns:
         Tuple of (X_train, X_val, X_test, y_train, y_val, y_test)
-        
-    TODO: Implement stratified splitting to maintain class distribution
     """
-    pass
-
-
-def create_stratified_folds(
-    X: pd.DataFrame,
-    y: pd.Series,
-    n_folds: int = 5,
-    random_state: int = 42
-):
-    """
-    Create stratified K-fold splits for cross-validation.
+    # Verify proportions sum to 1
+    total = train_size + val_size + test_size
+    if not np.isclose(total, 1.0):
+        raise ValueError(f"train_size, val_size, and test_size must sum to 1.0, got {total}")
     
-    Args:
-        X: Feature DataFrame
-        y: Target Series
-        n_folds: Number of folds
-        random_state: Random seed for reproducibility
-        
-    Returns:
-        Generator yielding (train_idx, val_idx) for each fold
-        
-    TODO: Implement using StratifiedKFold from sklearn
-    """
-    pass
-
-
-def balance_dataset(X: pd.DataFrame, y: pd.Series, method: str = "oversample"):
-    """
-    Balance the dataset to handle class imbalance.
+    # First split: separate test set
+    X_temp, X_test, y_temp, y_test = train_test_split(
+        X, y, 
+        test_size=test_size, 
+        stratify=y, 
+        random_state=random_state
+    )
     
-    Args:
-        X: Feature DataFrame
-        y: Target Series
-        method: Balancing method ("oversample", "undersample", "smote")
-        
-    Returns:
-        Balanced X and y
-        
-    TODO: Implement balancing using imbalanced-learn library
-    """
-    pass
+    # Second split: separate train and validation
+    # Adjust val_size relative to remaining data
+    val_size_adjusted = val_size / (train_size + val_size)
+    
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_temp, y_temp,
+        test_size=val_size_adjusted,
+        stratify=y_temp,
+        random_state=random_state
+    )
+    
+    return X_train, X_val, X_test, y_train, y_val, y_test
