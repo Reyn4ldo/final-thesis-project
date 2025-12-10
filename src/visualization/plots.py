@@ -328,8 +328,8 @@ def plot_2d_scatter(X_reduced: np.ndarray, labels: Optional[np.ndarray] = None,
         unique_labels = np.unique(labels)
         n_labels = len(unique_labels)
         
-        # Use discrete colors if labels are categorical
-        if isinstance(labels[0], (str, np.str_)):
+        # Use discrete colors if labels are categorical (string type)
+        if isinstance(labels[0], str):
             colors = plt.cm.get_cmap(palette)(np.linspace(0, 1, n_labels))
             for i, label in enumerate(unique_labels):
                 mask = labels == label
@@ -556,8 +556,8 @@ def plot_reduction_comparison(X_pca: np.ndarray, X_tsne: np.ndarray,
         if labels is not None:
             unique_labels = np.unique(labels)
             
-            # Check if labels are categorical
-            if isinstance(labels[0], (str, np.str_)):
+            # Check if labels are categorical (string type)
+            if isinstance(labels[0], str):
                 colors = plt.cm.viridis(np.linspace(0, 1, len(unique_labels)))
                 for i, label in enumerate(unique_labels):
                     mask = labels == label
