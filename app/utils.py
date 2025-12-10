@@ -153,7 +153,9 @@ def validate_input(input_data: pd.DataFrame, expected_features: List[str]) -> Tu
         if feature not in input_data.columns and antibiotic_name not in input_data.columns:
             missing_features.append(antibiotic_name)
     
-    if len(missing_features) > 10:  # Allow some missing features
+    # Allow some missing features (up to 50% of total)
+    max_allowed_missing = len(expected_features) // 2
+    if len(missing_features) > max_allowed_missing:
         return False, f"Too many missing features: {len(missing_features)}/{len(expected_features)}"
     
     return True, ""
@@ -176,10 +178,17 @@ def calculate_mar_index(resistance_profile: Union[pd.Series, np.ndarray, Dict]) 
     else:
         values = resistance_profile
     
+    # Handle empty values
+    if len(values) == 0:
+        return 0.0
+    
+    # Check if values are floats (might have NaN)
+    is_float_type = len(values) > 0 and isinstance(values[0], (float, np.floating))
+    
     # Count resistant (value == 2)
     num_resistant = np.sum(values == 2)
     # Count total tested (non-missing)
-    num_tested = len(values[~np.isnan(values)]) if isinstance(values[0], float) else len(values)
+    num_tested = len(values[~np.isnan(values)]) if is_float_type else len(values)
     
     if num_tested == 0:
         return 0.0
@@ -371,6 +380,17 @@ def create_radar_chart(resistance_profile: Dict[str, int], antibiotic_names: Lis
             # Clean up antibiotic name for display
             labels.append(antibiotic.replace('_', ' ').title())
     
+    # Handle empty values
+    if not values:
+        # Create empty figure with message
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No data available for radar chart",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False
+        )
+        return fig
+    
     # Close the radar chart
     values.append(values[0])
     labels.append(labels[0])
@@ -524,6 +544,11 @@ def create_download_link(df: pd.DataFrame, filename: str, link_text: str) -> str
         
     Returns:
         HTML string for download link
+    
+    Note: This function is deprecated. Use st.download_button instead.
     """
+    import base64
+    
     csv = df.to_csv(index=False)
-    return f'<a href="data:file/csv;base64,{csv}" download="{filename}">{link_text}</a>'
+    b64 = base64.b64encode(csv.encode()).decode()
+    return f'<a href="data:file/csv;base64,{b64}" download="{filename}">{link_text}</a>'
