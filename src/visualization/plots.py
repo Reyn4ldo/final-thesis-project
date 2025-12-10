@@ -585,3 +585,499 @@ def plot_reduction_comparison(X_pca: np.ndarray, X_tsne: np.ndarray,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     
     return fig
+
+
+# ============================================================================
+# Supervised Learning Visualizations
+# ============================================================================
+
+def plot_confusion_matrix(
+    cm: np.ndarray,
+    class_names: List[str],
+    title: str = 'Confusion Matrix',
+    normalize: bool = False,
+    figsize: tuple = (8, 6),
+    save_path: Optional[str] = None
+):
+    """
+    Plot confusion matrix as a heatmap.
+    
+    Args:
+        cm: Confusion matrix
+        class_names: List of class names
+        title: Plot title
+        normalize: Whether to normalize by row (true labels)
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        fmt = '.2f'
+    else:
+        fmt = 'd'
+    
+    sns.heatmap(cm, annot=True, fmt=fmt, cmap='Blues', 
+                xticklabels=class_names, yticklabels=class_names,
+                cbar_kws={'label': 'Count' if not normalize else 'Proportion'},
+                ax=ax)
+    
+    ax.set_xlabel('Predicted Label', fontsize=12)
+    ax.set_ylabel('True Label', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_roc_curve(
+    y_true,
+    y_proba,
+    title: str = 'ROC Curve',
+    figsize: tuple = (8, 6),
+    save_path: Optional[str] = None
+):
+    """
+    Plot ROC curve for binary classification.
+    
+    Args:
+        y_true: True labels
+        y_proba: Predicted probabilities for positive class
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    from sklearn.metrics import roc_curve, auc
+    
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Calculate ROC curve
+    fpr, tpr, _ = roc_curve(y_true, y_proba)
+    roc_auc = auc(fpr, tpr)
+    
+    # Plot ROC curve
+    ax.plot(fpr, tpr, color='darkorange', lw=2, 
+            label=f'ROC curve (AUC = {roc_auc:.3f})')
+    
+    # Plot diagonal line
+    ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', 
+            label='Random Classifier')
+    
+    ax.set_xlim([0.0, 1.0])
+    ax.set_ylim([0.0, 1.05])
+    ax.set_xlabel('False Positive Rate', fontsize=12)
+    ax.set_ylabel('True Positive Rate', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.legend(loc='lower right')
+    ax.grid(True, alpha=0.3)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_precision_recall_curve(
+    y_true,
+    y_proba,
+    title: str = 'Precision-Recall Curve',
+    figsize: tuple = (8, 6),
+    save_path: Optional[str] = None
+):
+    """
+    Plot Precision-Recall curve.
+    
+    Args:
+        y_true: True labels
+        y_proba: Predicted probabilities for positive class
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    from sklearn.metrics import precision_recall_curve, auc
+    
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Calculate PR curve
+    precision, recall, _ = precision_recall_curve(y_true, y_proba)
+    pr_auc = auc(recall, precision)
+    
+    # Plot PR curve
+    ax.plot(recall, precision, color='darkorange', lw=2,
+            label=f'PR curve (AUC = {pr_auc:.3f})')
+    
+    ax.set_xlim([0.0, 1.0])
+    ax.set_ylim([0.0, 1.05])
+    ax.set_xlabel('Recall', fontsize=12)
+    ax.set_ylabel('Precision', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.legend(loc='lower left')
+    ax.grid(True, alpha=0.3)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_roc_curves_comparison(
+    results_dict: Dict[str, Dict[str, Any]],
+    title: str = 'ROC Curves Comparison',
+    figsize: tuple = (10, 8),
+    save_path: Optional[str] = None
+):
+    """
+    Plot multiple ROC curves on the same plot for comparison.
+    
+    Args:
+        results_dict: Dictionary with model_name -> {'y_true': ..., 'y_proba': ...}
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    from sklearn.metrics import roc_curve, auc
+    
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Plot diagonal line
+    ax.plot([0, 1], [0, 1], color='gray', lw=2, linestyle='--', 
+            label='Random Classifier', alpha=0.5)
+    
+    # Colors for different models
+    colors = plt.cm.tab10(np.linspace(0, 1, len(results_dict)))
+    
+    for (model_name, data), color in zip(results_dict.items(), colors):
+        y_true = data['y_true']
+        y_proba = data['y_proba']
+        
+        fpr, tpr, _ = roc_curve(y_true, y_proba)
+        roc_auc = auc(fpr, tpr)
+        
+        ax.plot(fpr, tpr, color=color, lw=2,
+                label=f'{model_name} (AUC = {roc_auc:.3f})')
+    
+    ax.set_xlim([0.0, 1.0])
+    ax.set_ylim([0.0, 1.05])
+    ax.set_xlabel('False Positive Rate', fontsize=12)
+    ax.set_ylabel('True Positive Rate', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.legend(loc='lower right')
+    ax.grid(True, alpha=0.3)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_model_comparison(
+    comparison_df: pd.DataFrame,
+    metric: str = 'f1',
+    title: str = 'Model Comparison',
+    figsize: tuple = (10, 6),
+    save_path: Optional[str] = None
+):
+    """
+    Plot bar chart comparing models on a specific metric.
+    
+    Args:
+        comparison_df: DataFrame with models as index and metrics as columns
+        metric: Metric to plot
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    if metric not in comparison_df.columns:
+        raise ValueError(f"Metric '{metric}' not found in comparison DataFrame")
+    
+    # Sort by metric
+    sorted_df = comparison_df.sort_values(metric, ascending=True)
+    
+    # Create horizontal bar plot
+    bars = ax.barh(range(len(sorted_df)), sorted_df[metric], color='steelblue')
+    
+    # Color the best model differently
+    bars[-1].set_color('darkgreen')
+    
+    ax.set_yticks(range(len(sorted_df)))
+    ax.set_yticklabels(sorted_df.index)
+    ax.set_xlabel(metric.upper(), fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.grid(axis='x', alpha=0.3)
+    
+    # Add value labels on bars
+    for i, (idx, row) in enumerate(sorted_df.iterrows()):
+        ax.text(row[metric], i, f' {row[metric]:.3f}', 
+                va='center', fontsize=10)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_metrics_heatmap(
+    comparison_df: pd.DataFrame,
+    title: str = 'Model Metrics Heatmap',
+    figsize: tuple = (10, 6),
+    save_path: Optional[str] = None
+):
+    """
+    Plot heatmap of all metrics for all models.
+    
+    Args:
+        comparison_df: DataFrame with models as index and metrics as columns
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    sns.heatmap(comparison_df, annot=True, fmt='.3f', cmap='YlGnBu',
+                cbar_kws={'label': 'Score'}, ax=ax, linewidths=0.5)
+    
+    ax.set_xlabel('Metric', fontsize=12)
+    ax.set_ylabel('Model', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_feature_importance(
+    importances: np.ndarray,
+    feature_names: List[str],
+    top_n: int = 15,
+    title: str = 'Feature Importance',
+    figsize: tuple = (10, 8),
+    save_path: Optional[str] = None
+):
+    """
+    Plot feature importance as horizontal bar chart.
+    
+    Args:
+        importances: Array of feature importances
+        feature_names: List of feature names
+        top_n: Number of top features to display
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Create DataFrame and sort
+    importance_df = pd.DataFrame({
+        'feature': feature_names,
+        'importance': importances
+    }).sort_values('importance', ascending=True).tail(top_n)
+    
+    # Create horizontal bar plot
+    ax.barh(range(len(importance_df)), importance_df['importance'], color='steelblue')
+    
+    ax.set_yticks(range(len(importance_df)))
+    ax.set_yticklabels(importance_df['feature'])
+    ax.set_xlabel('Importance', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.grid(axis='x', alpha=0.3)
+    
+    # Add value labels
+    for i, (idx, row) in enumerate(importance_df.iterrows()):
+        ax.text(row['importance'], i, f' {row["importance"]:.4f}',
+                va='center', fontsize=9)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_feature_importance_comparison(
+    importances_dict: Dict[str, np.ndarray],
+    feature_names: List[str],
+    top_n: int = 10,
+    title: str = 'Feature Importance Comparison',
+    figsize: tuple = (12, 8),
+    save_path: Optional[str] = None
+):
+    """
+    Compare feature importances from multiple models.
+    
+    Args:
+        importances_dict: Dictionary mapping model names to importance arrays
+        feature_names: List of feature names
+        top_n: Number of top features to display
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Get union of top features from all models
+    all_top_features = set()
+    for model_name, importances in importances_dict.items():
+        df = pd.DataFrame({
+            'feature': feature_names,
+            'importance': importances
+        }).sort_values('importance', ascending=False).head(top_n)
+        all_top_features.update(df['feature'].tolist())
+    
+    # Create DataFrame for comparison
+    comparison_data = []
+    for feature in all_top_features:
+        row = {'feature': feature}
+        for model_name, importances in importances_dict.items():
+            idx = feature_names.index(feature)
+            row[model_name] = importances[idx]
+        comparison_data.append(row)
+    
+    comparison_df = pd.DataFrame(comparison_data).set_index('feature')
+    
+    # Sort by mean importance
+    comparison_df['mean'] = comparison_df.mean(axis=1)
+    comparison_df = comparison_df.sort_values('mean', ascending=True).drop('mean', axis=1)
+    comparison_df = comparison_df.tail(top_n)
+    
+    # Plot grouped bar chart
+    comparison_df.plot(kind='barh', ax=ax, width=0.8)
+    
+    ax.set_xlabel('Importance', fontsize=12)
+    ax.set_ylabel('Feature', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.legend(title='Model', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax.grid(axis='x', alpha=0.3)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_multiclass_confusion_matrix(
+    cm: np.ndarray,
+    class_names: List[str],
+    title: str = 'Multi-class Confusion Matrix',
+    figsize: tuple = (12, 10),
+    save_path: Optional[str] = None
+):
+    """
+    Plot large confusion matrix for multi-class classification.
+    
+    Args:
+        cm: Confusion matrix
+        class_names: List of class names
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Normalize by row
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    
+    sns.heatmap(cm_normalized, annot=True, fmt='.2f', cmap='Blues',
+                xticklabels=class_names, yticklabels=class_names,
+                cbar_kws={'label': 'Proportion'}, ax=ax, linewidths=0.5)
+    
+    ax.set_xlabel('Predicted Label', fontsize=12)
+    ax.set_ylabel('True Label', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
+
+
+def plot_per_class_metrics(
+    report_dict: Dict[str, Any],
+    title: str = 'Per-Class Metrics',
+    figsize: tuple = (12, 8),
+    save_path: Optional[str] = None
+):
+    """
+    Plot per-class precision, recall, and F1-score.
+    
+    Args:
+        report_dict: Classification report dictionary from sklearn
+        title: Plot title
+        figsize: Figure size
+        save_path: Optional path to save figure
+        
+    Returns:
+        Matplotlib figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Extract per-class metrics
+    classes = []
+    precision_scores = []
+    recall_scores = []
+    f1_scores = []
+    
+    for class_name, metrics in report_dict.items():
+        if class_name in ['accuracy', 'macro avg', 'weighted avg']:
+            continue
+        if isinstance(metrics, dict):
+            classes.append(class_name)
+            precision_scores.append(metrics.get('precision', 0))
+            recall_scores.append(metrics.get('recall', 0))
+            f1_scores.append(metrics.get('f1-score', 0))
+    
+    # Create grouped bar chart
+    x = np.arange(len(classes))
+    width = 0.25
+    
+    ax.bar(x - width, precision_scores, width, label='Precision', color='steelblue')
+    ax.bar(x, recall_scores, width, label='Recall', color='darkorange')
+    ax.bar(x + width, f1_scores, width, label='F1-Score', color='green')
+    
+    ax.set_xlabel('Class', fontsize=12)
+    ax.set_ylabel('Score', fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(classes, rotation=45, ha='right')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    ax.set_ylim([0, 1.05])
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    return fig
